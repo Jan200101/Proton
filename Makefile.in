@@ -1209,7 +1209,7 @@ all-dist: $(DIST_OVR32) $(DIST_OVR64)
 
 LATENCYFLEX_VER := 0.1.1
 LATENCYFLEX_TARBALL := latencyflex-v$(LATENCYFLEX_VER).tar.xz 
-DIST_LATENCYFLEX_DIR := $(DST_DIR)/lib
+DIST_LATENCYFLEX_DIR := $(DST_DIR)/lib64
 DIST_LATENCYFLEX := $(OBJ)/.latencyflex-dist
 LATENCYFLEX_TARBALL_URL := LATENCYFLEX_TARBALL_URL := https://github.com/ishitatsuyuki/LatencyFleX/releases/download/v$(LATENCYFLEX_VER)/$(LATENCYFLEX_TARBALL)
 
@@ -1220,7 +1220,7 @@ $(SRC)/contrib/$(LATENCYFLEX_TARBALL):
 $(DIST_LATENCYFLEX): $(SRC)/contrib/$(LATENCYFLEX_TARBALL)
 	mkdir -p $(DIST_LATENCYFLEX_DIR)
 
-	(TEMP_DIR=`mktemp -d` && tar --no-same-owner -xf $< -C $$TEMP_DIR &&  cp -RT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" $(DIST_LATENCYFLEX_DIR) && rm -fr $$TEMP_DIR)
+	(TEMP_DIR=`mktemp -d` && tar --no-same-owner -xf $< -C $$TEMP_DIR &&  cp -RT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" $(DIST_LATENCYFLEX_DIR) && cp -RT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" "$(DST_DIR)/share/default_pfx/drive_c/windows/system32" && rm -fr $$TEMP_DIR)
 	touch $@
 
 all-dist: $(DIST_LATENCYFLEX)
