@@ -1217,10 +1217,10 @@ $(SRC)/contrib/$(LATENCYFLEX_TARBALL):
 	mkdir -p $(dir $@)
 	wget -O $@ $(LATENCYFLEX_TARBALL_URL)
 
-$(DIST_LATENCYFLEX): $(SRC)/contrib/$(LATENCYFLEX_TARBALL)
+$(DIST_LATENCYFLEX): $(SRC)/contrib/$(LATENCYFLEX_TARBALL) | default_pfx
 	mkdir -p $(DIST_LATENCYFLEX_DIR)
 
-	(TEMP_DIR=`mktemp -d` && tar --no-same-owner -xf $< -C $$TEMP_DIR &&  cp -RT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" $(DIST_LATENCYFLEX_DIR) && cp -RT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" "$(DST_DIR)/share/default_pfx/drive_c/windows/system32" && rm -fr $$TEMP_DIR)
+	(TEMP_DIR=`mktemp -d` && tar --no-same-owner -xf $< -C $$TEMP_DIR &&  cp -RT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" $(DIST_LATENCYFLEX_DIR) && cp -RT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" "$(DIST_PREFIX)/drive_c/windows/system32" && rm -fr $$TEMP_DIR)
 	touch $@
 
 all-dist: $(DIST_LATENCYFLEX)
