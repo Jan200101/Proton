@@ -199,6 +199,9 @@ GECKO64_TARBALL := wine-gecko-$(GECKO_VER)-x86_64.tar.xz
 WINEMONO_VER := 7.4.0
 WINEMONO_TARBALL := wine-mono-$(WINEMONO_VER)-x86.tar.xz
 
+LATENCYFLEX_VER := 0.1.1
+LATENCYFLEX_TARBALL := latencyflex-v$(LATENCYFLEX_VER).tar.xz 
+
 FONTS := $(SRCDIR)/fonts
 FONTS_OBJ := ./obj-fonts
 ALT_FONTS_OBJ := $(FONTS_OBJ)/alt
@@ -214,10 +217,12 @@ ifeq ($(CONTAINER),)
 GECKO64_TARBALL_URL := https://dl.winehq.org/wine/wine-gecko/$(GECKO_VER)/$(GECKO64_TARBALL)
 GECKO32_TARBALL_URL := https://dl.winehq.org/wine/wine-gecko/$(GECKO_VER)/$(GECKO32_TARBALL)
 MONO_TARBALL_URL := https://github.com/madewokherd/wine-mono/releases/download/wine-mono-$(WINEMONO_VER)/$(WINEMONO_TARBALL)
+LATENCYFLEX_TARBALL_URL := https://github.com/ishitatsuyuki/LatencyFleX/releases/download/v$(LATENCYFLEX_VER)/$(LATENCYFLEX_TARBALL)
 
 SHARED_GECKO64_TARBALL := $(SRCDIR)/../gecko/$(GECKO64_TARBALL)
 SHARED_GECKO32_TARBALL := $(SRCDIR)/../gecko/$(GECKO32_TARBALL)
 SHARED_MONO_TARBALL := $(SRCDIR)/../mono/$(WINEMONO_TARBALL)
+SHARED_LATENCYFLEX_TARBALL := $(SRCDIR)/../latencyflex/$(LATENCYFLEX_TARBALL)
 
 $(SHARED_GECKO64_TARBALL):
 	mkdir -p $(dir $@)
@@ -231,7 +236,11 @@ $(SHARED_MONO_TARBALL):
 	mkdir -p $(dir $@)
 	wget -O "$@" "$(MONO_TARBALL_URL)"
 
-downloads: $(SHARED_GECKO64_TARBALL) $(SHARED_GECKO32_TARBALL) $(SHARED_MONO_TARBALL)
+$(SHARED_LATENCYFLEX_TARBALL):
+	mkdir -p $(dir $@)
+	wget -O "$@" "$(LATENCYFLEX_TARBALL_URL)"
+
+downloads: $(SHARED_GECKO64_TARBALL) $(SHARED_GECKO32_TARBALL) $(SHARED_MONO_TARBALL) $(SHARED_LATENCYFLEX_TARBALL)
 
 ##
 ## dist/install -- steps to finalize the install
@@ -274,9 +283,10 @@ DIST_WINEMONO := $(DIST_WINEMONO_DIR)/wine-mono-$(WINEMONO_VER)
 DIST_FONTS := $(DST_DIR)/share/fonts
 DIST_WINEOPENXR_JSON64 := $(DIST_PREFIX)/drive_c/openxr/wineopenxr64.json
 DIST_WINEOPENXR64 := $(DIST_PREFIX)/drive_c/windows/system32/wineopenxr.dll
+DIST_LATENCYFLEX := $(DST_LIBDIR64)/wine/x86_64-windows/latencyflex_wine.dll
 
 DIST_TARGETS := $(DIST_COPY_TARGETS) $(DIST_OVR32) $(DIST_OVR64) \
-                $(DIST_GECKO32) $(DIST_GECKO64) $(DIST_WINEMONO) \
+                $(DIST_GECKO32) $(DIST_GECKO64) $(DIST_WINEMONO) $(DIST_LATENCYFLEX) \
                 $(DIST_COMPAT_MANIFEST) $(DIST_LICENSE) $(DIST_TOOLMANIFEST) \
                 $(DIST_OFL_LICENSE) $(DIST_AV1_PATENTS) $(DIST_FONTS)
 
@@ -352,6 +362,24 @@ $(DIST_WINEMONO): | $(DIST_WINEMONO_DIR)
 		fi; \
 		tar -xf "$(SRCDIR)/contrib/$(WINEMONO_TARBALL)" -C "$(dir $@)"; \
 	fi
+
+$(DIST_LATENCYFLEX): dist_prefix
+	if [ -e "$(SHARED_LATENCYFLEX_TARBALL)" ]; then \
+		tar -xf "$(SHARED_LATENCYFLEX_TARBALL)" -C "$(dir $@)"; \
+	else \
+		mkdir -p $(SRCDIR)/contrib/; \
+		if [ ! -e "$(SRCDIR)/contrib/$(LATENCYFLEX_TARBALL)" ]; then \
+			echo ">>>> Downloading LatencyFleX. To avoid this in future, put it here: $(SRCDIR)/../latencyflex/$(LATENCYFLEX_TARBALL)"; \
+			wget -O "$(SRCDIR)/contrib/$(LATENCYFLEX_TARBALL)" "$(LATENCYFLEX_TARBALL_URL)"; \
+		fi; \
+		TEMP_DIR=`mktemp -d` && \
+		tar --no-same-owner -xf "$(SRCDIR)/contrib/$(LATENCYFLEX_TARBALL)" -C $$TEMP_DIR && \
+		cp -fRT "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib" $(DST_LIBDIR64) && \
+		cp -f "$$TEMP_DIR/latencyflex-v$(LATENCYFLEX_VER)/wine/usr/lib/wine/x86_64-windows"/*.dll "$(DIST_PREFIX)/drive_c/windows/system32" && \
+		rm -fr $$TEMP_DIR; \
+	fi
+
+lfx: $(DIST_LATENCYFLEX)
 
 $(DIST_FONTS): fonts
 	mkdir -p $@
